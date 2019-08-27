@@ -1,0 +1,8 @@
+/docs/_build/
+/*.egg-info/
+/.tox
+/.coverage
+__pycache__/
+
+*.png
+*.gv
