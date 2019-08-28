@@ -259,51 +259,108 @@ class Task:
 
 
 @attr.s
-class TaskBuilder:
-    func = attr.ib()
-    decorations = attr.ib(factory=lambda: collections.defaultdict(list))
+class DecoratorStack:
+    """
+    Utility to collect function decorators and execute them in reverse order at
+    once.
+    """
 
-    def add_decoration(self, name, *args, **kwargs):
-        self.decorations[name].append((args, kwargs))
+    function = attr.ib()
+    decorator_list = attr.ib(factory=list)
 
-    def build_task(self, *args, **kwargs):
-        task = Task(self.func, *args, **kwargs)
+    def add_decorator(self, decorator):
+        """Add decorator to stack. """
+        if not callable(decorator):
+            raise ValueError('Decoration must be callable')
+        self.decorator_list.append(decorator)
 
-        task.followed_by = set(
-            Transition(*args, **kwargs)
-            for args, kwargs in self.decorations['followed_by']
-        )
+    def apply_to(self, func):
+        """
+        Apply decorators to func and return new func created by chain of
+        decorators.
 
-        task.is_start_point = bool(self.decorations['start_point'])
-        task.is_join_point = bool(self.decorations['join_point'])
-        task.is_end_point = bool(self.decorations['end_point'])
-
-        return task
+        Return value of each function is used as argument of next function and
+        first function will receive ``func`` as argument.
+        """
+        for decorator in reversed(self.decorator_list):
+            func = decorator(func)
+        return func
 
     @classmethod
     def create(cls, func):
+        """Create new :class:`DecoratorStack` from function or other stack."""
         if isinstance(func, cls):
             return func
         return cls(func)
 
+    @classmethod
+    def add(cls, decorator):
+        """
+        Create decorator function that will create :class:`DecoratorStack` using
+        :meth:`create` and add decorator to list of decorators.
+        """
+        def inner(func):
+            stack = cls.create(func)
+            stack.add_decorator(decorator)
+            return stack
+        return inner
+
+    @classmethod
+    def reduce(cls, decorator):
+        """
+        Create decorator function that will create :class:`DecoratorStack` using
+        :meth:`create`, add decorator to list of decorators and aplly decorators
+        from stack to decorated function.
+        """
+        def inner(func):
+            stack = cls.create(func)
+            obj = decorator(stack.function)
+            stack.apply_to(obj)
+            return obj
+        return inner
+
 
 def task(*args, **kwargs):
+    """
+    Decorator to mark function as workflow task. See :class:`Task` for arguments
+    docomentation.
+    """
     def decorator(func):
-        return TaskBuilder.create(func).build_task(*args, **kwargs)
-    return decorator
+        return Task(func, *args, **kwargs)
+    return DecoratorStack.reduce(decorator)
 
 
-def _decorator_factory(name):
-    def outer(*args, **kwargs):
-        def inner(func):
-            builder = TaskBuilder.create(func)
-            builder.add_decoration(name, *args, **kwargs)
-            return builder
-        return inner
-    return outer
+def followed_by(*args, **kwargs):
+    """
+    Add transition to next task. See :class:`Transition` for argumets
+    documentation.
+    """
+    transition = Transition(dest, cond)
+    def decorator(func):
+        func.followed_by.add(transition)
+        return func
+    return DecoratorStack.add(decorator)
 
 
-followed_by = _decorator_factory('followed_by')
-start_point = _decorator_factory('start_point')
-join_point = _decorator_factory('join_point')
-end_point = _decorator_factory('end_point')
+def start_point():
+    """Mark task as start point. See :class:`Task`."""
+    def decorator(func):
+        func.is_start_point = True
+        return func
+    return DecoratorStack.add(decorator)
+
+
+def join_point():
+    """Mark task as join point. See :class:`Task`."""
+    def decorator(func):
+        func.is_join_point = True
+        return func
+    return DecoratorStack.add(decorator)
+
+
+def end_point():
+    """Mark task as end point. See :class:`Task`."""
+    def decorator(func):
+        func.is_end_point = True
+        return func
+    return DecoratorStack.add(decorator)
