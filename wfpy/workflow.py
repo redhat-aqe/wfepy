@@ -227,6 +227,13 @@ class Transition:
     dest = attr.ib()
     cond = attr.ib(default=None)
 
+    def __attrs_post_init__(self):
+        if isinstance(self.dest, Task):
+            self.dest = self.dest.name
+        if not isinstance(self.dest, str):
+            raise TypeError(f'Invalid type of destination {type(self.dest)}, must be '
+                            'instance of Task or string.')
+
 
 @attr.s(hash=True)
 class Task:
