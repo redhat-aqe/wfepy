@@ -22,7 +22,7 @@ class Workflow:
 
     def load_tasks(self, module):
         if isinstance(module, str):
-            logger.debug(f'Getting module {module} by name from sys.modules')
+            logger.debug('Getting module %s by name from sys.modules', module)
             module = sys.modules[module]
         # load all tasks from module
         duplicates = []
@@ -30,13 +30,13 @@ class Workflow:
             obj = getattr(module, name)
             if isinstance(obj, Task):
                 if name in self.tasks and self.tasks[name] != obj:
-                    logger.error(f'Duplicate task {name} from {module.__file__}')
+                    logger.error('Duplicate task %s from %s', name, module.__file__)
                     duplicates.append(name)
                 else:
-                    logger.debug(f'Loaded task {name} from {module.__file__}')
+                    logger.debug('Loaded task %s from %s', name, module.__file__)
                     self.tasks[name] = obj
         if duplicates:
-            raise WorkflowError(f'Duplicate tasks: {",".join(name)}')
+            raise WorkflowError('Duplicate tasks: ' + ",".join(name))
         # rebuild graph
         for name, task in self.tasks.items():
             for transition in task.followed_by:
@@ -58,19 +58,19 @@ class Workflow:
         for name, task in self.tasks.items():
             for transition in task.followed_by:
                 if transition.dest not in self.tasks:
-                    problems.append(f'Missing task {transition.dest}.')
+                    problems.append('Missing task %s.' % transition.dest)
             if not task.followed_by and not task.is_end_point:
-                problems.append(f'Task {name} has no ongoing transitions '
-                                'but is not marked as end point.')
+                problems.append('Task %s has no ongoing transitions '
+                                'but is not marked as end point.' % name)
             if not task.preceeded_by and not task.is_start_point:
-                problems.append(f'Task {name} has no incoming transitions '
-                                'but is not marked as start point.')
+                problems.append('Task %s has no incoming transitions '
+                                'but is not marked as start point.' % name)
             if len(task.preceeded_by) > 1 and not task.is_join_point:
-                problems.append(f'Task {name} has multiple incoming transitions '
-                                'but is not marked as join point.')
+                problems.append('Task %s has multiple incoming transitions '
+                                'but is not marked as join point.' % name)
             if len(task.preceeded_by) == 1 and task.is_join_point:
-                problems.append(f'Task {name} has single incoming transition '
-                                'and is marked as join point.')
+                problems.append('Task %s has single incoming transition '
+                                'and is marked as join point.' %name)
         if problems:
             for msg in problems:
                 logger.error(msg)
@@ -115,7 +115,7 @@ class Runner:
         next_state = []
         for task_name, task_state in state:
             if task_state == TaskState.WAITING:
-                logger.debug(f'Task {task_name} is ready now, was waiting')
+                logger.debug('Task %s is ready now, was waiting', task_name)
                 task_state = TaskState.READY
             next_state.append((task_name, task_state))
         return next_state
@@ -130,49 +130,49 @@ class Runner:
                     # Join points must be merged, can't process them in this loop.
                     next_state.append((task_name, TaskState.BLOCKED))
                 else:
-                    logger.debug(f'Task {task_name} is ready now, was new')
+                    logger.debug('Task %s is ready now, was new', task_name)
                     next_state.append((task_name, TaskState.READY))
 
             elif task_state == TaskState.READY:
-                logger.info(f'Executing task {task_name}')
+                logger.info('Executing task %s', task_name)
                 result = task(self.context)
                 if not isinstance(result, bool):
                     logger.warning(
-                        f'Task {task_name} returned {result!r} but should have return '
-                        'True or False wheter task has been completed or not. Result '
-                        'will be converted to bool implicitly or to True if result '
-                        'is None.'
+                        'Task %s returned %r but should have return True or False '
+                        'wheter task has been completed or not. Result will be '
+                        'converted to bool implicitly or to True if result is None.',
+                        task_name, result
                     )
                     if result is None:
                         result = True
                 if result:
-                    logger.info(f'Task {task_name} is complete')
+                    logger.info('Task %s is complete', task_name)
                     next_state.append((task_name, TaskState.COMPLETE))
                 else:
-                    logger.info(f'Task {task_name} is waiting')
+                    logger.info('Task %s is waiting', task_name)
                     next_state.append((task_name, TaskState.WAITING))
 
             elif task_state == TaskState.COMPLETE:
                 if task.is_end_point:
-                    logger.info(f'Reached end point {task_name}')
+                    logger.info('Reached end point %s', task_name)
                 else:
-                    logger.debug(f'Expanding task {task_name}')
+                    logger.debug('Expanding task %s', task_name)
                 for transition in task.followed_by:
                     new_state = TaskState.NEW
                     if transition.cond and not transition.cond(self.context):
                         new_state = TaskState.CANCELLED
-                    logger.debug(f'Enqueue new task {transition.dest}, '
-                                 f'from {task_name}')
+                    logger.debug('Enqueue new task %s, from %s',
+                                 transition.dest, task_name)
                     next_state.append((transition.dest, new_state))
 
             elif task_state == TaskState.CANCELLED:
                 if task.is_join_point:
                     next_state.append((task_name, TaskState.CANCELLED))
                 else:
-                    logger.info(f'Task {task_name} execution was canceled by condition')
+                    logger.info('Task %s execution was canceled by condition', task_name)
                     for transition in task.followed_by:
-                        logger.debug(f'Enqueue new task {transition.dest}, '
-                                     f'from {task_name}')
+                        logger.debug('Enqueue new task %s, from %s',
+                                    transition.dest, task_name)
                         next_state.append((transition.dest, TaskState.CANCELLED))
 
             else:
@@ -199,18 +199,17 @@ class Runner:
             join_task = self.workflow.tasks[join_name]
 
             if len(join_task.preceeded_by) == len(join_list):
-                join_preceedors = ', '.join(join_task.preceeded_by)
-                logger.debug(f'Joining tasks {join_preceedors} to task {join_name}')
+                logger.debug('Joining tasks %s to task %s',
+                             ', '.join(join_task.preceeded_by), join_name)
                 if all(s == TaskState.CANCELLED for _, s in join_list):
                     next_state.append((join_name, TaskState.CANCELLED))
                 else:
                     next_state.append((join_name, TaskState.READY))
 
             else:
-                join_blocked_by = ', '.join(
-                    set(join_task.preceeded_by) - set(n for n, _ in join_list))
-                logger.debug(f'Join task {join_name} cannot be unblocked, '
-                             f'waiting for {join_blocked_by} to finish')
+                blocked_by = set(join_task.preceeded_by) - set(n for n, _ in join_list)
+                logger.debug('Join task %s cannot be unblocked, waiting for %s '
+                             'to finish', join_name, ', '.join(blocked_by))
                 for _, join_state in join_list:
                     next_state.append((join_name, join_state))
 
@@ -236,8 +235,8 @@ class Transition:
         if isinstance(self.dest, Task):
             self.dest = self.dest.name
         if not isinstance(self.dest, str):
-            raise TypeError(f'Invalid type of destination {type(self.dest)}, must be '
-                            'instance of Task or string.')
+            raise TypeError('Invalid type of destination %s, must be instance '
+                            'of Task or string.' % type(self.dest))
 
 
 @attr.s(hash=True)
