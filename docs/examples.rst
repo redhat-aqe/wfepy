@@ -1,6 +1,7 @@
 Examples
 ========
 
+
 Simple
 ------
 
@@ -55,3 +56,27 @@ executed, so process stopped.
 Waiting tasks are tasks that returned ``False`` (finished tasks must return
 ``True``). This allows to implement waiting for events, eg. user must add
 comment to Jira before process can continue.
+
+
+Branches
+--------
+
+Task can be also followed by multiple tasks so process will be executing
+multiple task branches in parallel. Task are not executed in parallel by threads
+or processes but it still can be used to execute as much as possible tasks if
+task in one branch is waiting.
+
+Looking at coffee drinking example, you can do some other things while waiting
+until coffee and while drinking.
+
+.. literalinclude:: examples/branches.py
+
+Task ``start`` has multiple ``followed_by`` decorations so when this task
+finish, process will expand followed by list and start executing tasks from both
+branches. In the end of workflow branches are joined in ``end`` task. Join
+points must be explicity marked by ``join_point`` decorator to avoid mistakes.
+
+If you forgot to mark join point (or start point or end point)
+:meth:`wfpy.Workflow.check_graph` will raise error and you should fix it.
+
+.. graphviz:: examples/branches.gv
