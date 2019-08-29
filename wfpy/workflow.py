@@ -1,7 +1,6 @@
 import sys
 import functools
 import itertools
-import collections
 import enum
 import pickle
 import logging
@@ -70,7 +69,7 @@ class Workflow:
                                 'but is not marked as join point.' % name)
             if len(task.preceeded_by) == 1 and task.is_join_point:
                 problems.append('Task %s has single incoming transition '
-                                'and is marked as join point.' %name)
+                                'and is marked as join point.' % name)
         if problems:
             for msg in problems:
                 logger.error(msg)
@@ -169,10 +168,11 @@ class Runner:
                 if task.is_join_point:
                     next_state.append((task_name, TaskState.CANCELLED))
                 else:
-                    logger.info('Task %s execution was canceled by condition', task_name)
+                    logger.info('Task %s execution was canceled by condition',
+                                task_name)
                     for transition in task.followed_by:
                         logger.debug('Enqueue new task %s, from %s',
-                                    transition.dest, task_name)
+                                     transition.dest, task_name)
                         next_state.append((transition.dest, TaskState.CANCELLED))
 
             else:
@@ -339,9 +339,8 @@ def followed_by(*args, **kwargs):
     Add transition to next task. See :class:`Transition` for argumets
     documentation.
     """
-    transition = Transition(*args, **kwargs)
     def decorator(func):
-        func.followed_by.add(transition)
+        func.followed_by.add(Transition(*args, **kwargs))
         return func
     return DecoratorStack.add(decorator)
 
