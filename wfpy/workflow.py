@@ -108,7 +108,9 @@ class Runner:
         self.state = self._prepare(self.state)
         while any(task_state not in {TaskState.WAITING, TaskState.BLOCKED}
                   for _, task_state in self.state):
-            self.state = self._step(self.state)
+            self.state, error = self._step(self.state)
+            if error is not None:
+                raise error
 
     def _prepare(self, state):
         next_state = []
@@ -120,9 +122,15 @@ class Runner:
         return next_state
 
     def _step(self, state):
+        task_error = None
         next_state = []
         for task_name, task_state in state:
             task = self.workflow.tasks[task_name]
+
+            # Stop processing if there is error.
+            if task_error is not None:
+                next_state.append((task_name, task_state))
+                continue
 
             if task_state == TaskState.NEW:
                 if task.is_join_point:
@@ -134,7 +142,14 @@ class Runner:
 
             elif task_state == TaskState.READY:
                 logger.info('Executing task %s', task_name)
-                result = task(self.context)
+                try:
+                    result = task(self.context)
+                except Exception as e:
+                    logger.exception(e)
+                    # To not break runner state, exception must be stored and
+                    # raised later.
+                    task_error = e
+                    result = False
                 if not isinstance(result, bool):
                     logger.warning(
                         'Task %s returned %r but should have return True or False '
@@ -144,7 +159,10 @@ class Runner:
                     )
                     if result is None:
                         result = True
-                if result:
+                if task_error:
+                    logger.error('Task %s failed', task_name)
+                    next_state.append((task_name, TaskState.READY))
+                elif result:
                     logger.info('Task %s is complete', task_name)
                     next_state.append((task_name, TaskState.COMPLETE))
                 else:
@@ -178,7 +196,8 @@ class Runner:
             else:
                 next_state.append((task_name, task_state))
 
-        return self._joining_step(next_state)
+        # Can't raise error there, next_state must be stored in run().
+        return self._joining_step(next_state), task_error
 
     def _joining_step(self, state):
         next_state = []
