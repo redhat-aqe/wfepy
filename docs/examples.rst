@@ -1,0 +1,57 @@
+Examples
+========
+
+Simple
+------
+
+Whole worfklow is build from tasks and connections between them.
+
+Tasks are functions with ``task()`` decorator and connection between tasks is
+defined by ``followed_by()`` decorator. First argument of ``followed_by()``
+decorator is name of next tasks, that should be executed when current task is
+finished.
+
+Tasks names are intentionally strings so you don't need to care about imports or
+order of declarations in file. But that is not requirement, ``followed_by()``
+also accept other tasks (function decorated with ``task()``).
+
+.. literalinclude:: examples/simple.py
+
+Workflow can be converted to graph. Nice to have in documentation or for
+debugging purposes. Even this workflow is pretty simple, real-world workflow can
+be complex with lot of tasks declared across many files, with conditional
+branches, ...
+
+.. graphviz:: examples/simple.gv
+
+Finally workflow can be executed. Example script that will execute workflow from
+example above.
+
+.. literalinclude:: examples/simple_run.py
+
+Output from script ::
+
+    INFO:wfpy.workflow:Executing task start
+    INFO:wfpy.workflow:Task start is complete
+    INFO:wfpy.workflow:Executing task make_coffee
+    INFO:wfpy.workflow:Task make_coffee is complete
+    INFO:wfpy.workflow:Executing task drink_coffee
+    INFO:wfpy.workflow:Task drink_coffee is waiting
+
+    INFO:root:Workflow is not finished, trying run it again...
+    INFO:wfpy.workflow:Executing task drink_coffee
+    INFO:wfpy.workflow:Task drink_coffee is waiting
+
+    INFO:root:Workflow is not finished, trying run it again...
+    INFO:wfpy.workflow:Executing task drink_coffee
+    INFO:wfpy.workflow:Task drink_coffee is complete
+    INFO:wfpy.workflow:Executing task end
+    INFO:wfpy.workflow:Task end is complete
+    INFO:wfpy.workflow:Reached end point end
+
+Task ``drink_coffee`` was waiting for something and no other tasks could be
+executed, so process stopped.
+
+Waiting tasks are tasks that returned ``False`` (finished tasks must return
+``True``). This allows to implement waiting for events, eg. user must add
+comment to Jira before process can continue.

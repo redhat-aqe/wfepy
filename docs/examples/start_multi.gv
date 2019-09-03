@@ -1,0 +1,18 @@
+digraph Workflow {
+	start_a [fillcolor=green style="bold,filled"]
+	start_a -> task_ab
+	start_b [fillcolor=green style="bold,filled"]
+	start_b -> task_ab
+	task_a [fillcolor=white style="solid,filled"]
+	task_a -> task_xy
+	task_ab [fillcolor=white style="solid,filled"]
+	task_ab -> task_a
+	task_ab -> task_b
+	task_b [fillcolor=white style="solid,filled"]
+	task_b -> task_xy
+	task_x [fillcolor=red style="bold,filled"]
+	task_xy [fillcolor=white style="solid,filled"]
+	task_xy -> task_x
+	task_xy -> task_y
+	task_y [fillcolor=red style="bold,filled"]
+}

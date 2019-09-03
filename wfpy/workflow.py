@@ -12,14 +12,26 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowError(RuntimeError):
-    pass
+    """Generic workflow error."""
 
 
 @attr.s
 class Workflow:
+    """
+    Workflow graph - collection of tasks.
+
+    :ivar task: collection of tasks, dict with tasks name as key
+    """
+
     tasks = attr.ib(factory=dict, init=False)
 
     def load_tasks(self, module):
+        """
+        Load tasks from module and add them to workflow graph. Can be also
+        module name, then module will be get from `sys.module` by that name.
+
+        :raises WorkflowError: if name of loaded task is not unique
+        """
         if isinstance(module, str):
             logger.debug('Getting module %s by name from sys.modules', module)
             module = sys.modules[module]
@@ -46,13 +58,21 @@ class Workflow:
 
     @property
     def start_points(self):
+        """List of names of tasks that are marked as start points."""
         return [name for name, task in self.tasks.items() if task.is_start_point]
 
     @property
     def end_points(self):
+        """List of names of tasks that are marked as end points."""
         return [name for name, task in self.tasks.items() if task.is_end_point]
 
     def check_graph(self, strict=True):
+        """
+        Check workflow graph - if some task is missing, all task are marked
+        properly as start, join or end points, ...
+
+        :raises WorkflowError: when there are some problems with workflow graph
+        """
         problems = []
         for name, task in self.tasks.items():
             for transition in task.followed_by:
@@ -76,11 +96,20 @@ class Workflow:
             raise WorkflowError('Invalid graph! ' + ' '.join(problems))
 
     def create_runner(self, *args, **kwargs):
+        """Create :class:`Runner` from this workflow."""
         return Runner(self, *args, **kwargs)
 
 
 @attr.s
 class Runner:
+    """
+    Workflow execution engine.
+
+    :ivar workflow: :class:`Workflow`
+    :ivar context: arbitrary user object, passed to all tasks
+    :ivar state: state of execution
+    """
+
     workflow = attr.ib()
     context = attr.ib(default=None)
     state = attr.ib(default=None, init=False)
@@ -89,11 +118,16 @@ class Runner:
         self.state = [(task, TaskState.NEW) for task in self.workflow.start_points]
 
     def load(self, file_path):
+        """Load runner from file. See also :meth:`dump`."""
         with open(file_path, 'rb') as f:
             for key, value in pickle.load(f).items():
                 setattr(self, key, value)
 
     def dump(self, file_path):
+        """
+        Dump runner to file. Stored dump contains :attr:`context` and
+        :attr:`state` so runner execution can be restored and finished later.
+        """
         with open(file_path, 'wb') as f:
             pickle.dump({
                 'state': self.state,
@@ -102,9 +136,25 @@ class Runner:
 
     @property
     def finished(self):
+        """
+        Workflow execution finished. True when reached end points and there is
+        no task that should be executed.
+        """
         return not self.state
 
     def run(self):
+        """
+        Execute tasks from workflow.
+
+        Some tasks might end in state in which they cannot be executed (waiting
+        for external event or join point waiting for preceeding tasks). If there
+        is no task that can be executed run will stop executing and
+        :attr:`finished` property will be ``False``. In that case run should be
+        called again (with some delay or runner can be dumped to file by
+        :meth:`dump` and executed later).
+
+        See :class:`TaskState` for list of task states.
+        """
         self.state = self._prepare(self.state)
         while any(task_state not in {TaskState.WAITING, TaskState.BLOCKED}
                   for _, task_state in self.state):
@@ -237,16 +287,39 @@ class Runner:
 
 @enum.unique
 class TaskState(enum.Enum):
-    NEW = 1         # task is new in queue
-    WAITING = 2     # task is waiting for condition
-    BLOCKED = 6     # task is waiting for completion of preceeding tasks
-    READY = 3       # task is ready for execution
-    COMPLETE = 4    # task was executed and will be expanded
-    CANCELLED = 5   # task was not executed because of condition was not met
+    """
+    Enumeration of task states.
+
+    :cvar NEW: task new in queue
+    :cvar WAITING: task is waiting, function returned ``False``
+    :cvar BLOCKED: task is waiting for completion of preceeding tasks
+    :cvar READY: task is ready for execution
+    :cvar COMPLETE: task was executed and will be expanded
+    :cvar CANCELLED: task was not executed because transition condition was not met
+
+    .. graphviz:: task-state.gv
+    """
+
+    NEW = 1
+    WAITING = 2
+    BLOCKED = 6
+    READY = 3
+    COMPLETE = 4
+    CANCELLED = 5
 
 
 @attr.s(hash=True)
 class Transition:
+    """
+    Transition to following task.
+
+    :ivar dest: name of following task
+    :ivar cond: condition whether following task should be executed, function
+                that will receive context from :class:`Runner` and must return bool
+                (allows to create conditional branching and looping in graph)
+
+    """
+
     dest = attr.ib()
     cond = attr.ib(default=None)
 
@@ -260,6 +333,26 @@ class Transition:
 
 @attr.s(hash=True)
 class Task:
+    """
+    Workflow task. Wraps function for use in workflow.
+
+    Wrapped function must accept context from :class:`Runner` via only parameter
+    and should return ``True`` or ``False`` wheter task was completed and
+    execution can continue with following tasks.
+
+    If wrapped function returned ``False`` execution will stop and task will be
+    executed again in next run. This way can be implemented waiting, eg. for
+    external event.
+
+    :ivar function: wrapped function
+    :ivar name: task name (by default function name)
+    :ivar followed_by: connection to next tasks (set of :class:`Transition`)
+    :ivar preceeded_by: names of preceeding tasks, generated by :class:`Workflow`
+    :ivar is_start_point: task is start point of workflow
+    :ivar is_join_point: task is join point of multiple tasks
+    :ivar is_end_point: task is end point of workflow
+    """
+
     func = attr.ib()
     name = attr.ib()
 

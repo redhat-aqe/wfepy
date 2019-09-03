@@ -1,0 +1,10 @@
+digraph Workflow {
+	complete [fillcolor=red style="bold,filled"]
+	create_bugzilla [fillcolor=white style="solid,filled"]
+	create_bugzilla -> complete
+	create_jira [fillcolor=white style="solid,filled"]
+	create_jira -> complete
+	start [fillcolor=green style="bold,filled"]
+	start -> create_bugzilla
+	start -> create_jira
+}
