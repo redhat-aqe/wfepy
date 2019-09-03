@@ -340,7 +340,7 @@ def followed_by(*args, **kwargs):
     Add transition to next task. See :class:`Transition` for argumets
     documentation.
     """
-    transition = Transition(dest, cond)
+    transition = Transition(*args, **kwargs)
     def decorator(func):
         func.followed_by.add(transition)
         return func
