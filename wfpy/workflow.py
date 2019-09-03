@@ -25,13 +25,18 @@ class Workflow:
             logger.debug(f'Getting module {module} by name from sys.modules')
             module = sys.modules[module]
         # load all tasks from module
+        duplicates = []
         for name in dir(module):
             obj = getattr(module, name)
             if isinstance(obj, Task):
                 if name in self.tasks and self.tasks[name] != obj:
-                    raise WorkflowError(f'Duplicate task {name}')
-                logger.debug(f'Loaded task {name} from {module.__file__}')
-                self.tasks[name] = obj
+                    logger.error(f'Duplicate task {name} from {module.__file__}')
+                    duplicates.append(name)
+                else:
+                    logger.debug(f'Loaded task {name} from {module.__file__}')
+                    self.tasks[name] = obj
+        if duplicates:
+            raise WorkflowError(f'Duplicate tasks: {",".join(name)}')
         # rebuild graph
         for name, task in self.tasks.items():
             for transition in task.followed_by:
