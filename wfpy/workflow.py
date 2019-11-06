@@ -66,7 +66,7 @@ class Workflow:
         """List of names of tasks that are marked as end points."""
         return [name for name, task in self.tasks.items() if task.is_end_point]
 
-    def check_graph(self, strict=True):
+    def check_graph(self):
         """
         Check workflow graph - if some task is missing, all task are marked
         properly as start, join or end points, ...
