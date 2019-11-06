@@ -156,13 +156,34 @@ class Runner:
         See :class:`TaskState` for list of task states.
         """
         self.state = self._prepare(self.state)
-        while any(task_state not in {TaskState.WAITING, TaskState.BLOCKED}
-                  for _, task_state in self.state):
-            self.state, error = self._step(self.state)
+        while self._is_step_possible(self.state):
+            next_state, error = self._step(self.state)
             if error is not None:
                 raise error
 
+            if self.state == next_state:
+                logger.warning('State has not changed, stopping workflow.')
+                break
+
+            self.state = next_state
+
+    def _is_step_possible(self, state):
+        step_possible = False
+        for task_name, task_state in self.state:
+            task = self.workflow.tasks[task_name]
+            # Canceled task can be expanded if is not join point
+            if task_state == TaskState.CANCELED:
+                step_possible |= not task.is_join_point
+            if task_state not in {TaskState.WAITING, TaskState.BLOCKED}:
+                step_possible |= True
+        return step_possible
+
     def _prepare(self, state):
+        if all(task_state == TaskState.CANCELED for _, task_state in state):
+            logger.error('All tasks are in canceled state, this is probably '
+                         'problem in your tasks conditions. Workflow cannot '
+                         'continue, stopping.')
+            return []
         next_state = []
         for task_name, task_state in state:
             if task_state == TaskState.WAITING:
@@ -270,8 +291,12 @@ class Runner:
             if len(join_task.preceded_by) == len(join_list):
                 logger.debug('Joining tasks %s to task %s',
                              ', '.join(join_task.preceded_by), join_name)
-                if all(s == TaskState.CANCELLED for _, s in join_list):
-                    next_state.append((join_name, TaskState.CANCELLED))
+                if all(s == TaskState.CANCELED for _, s in join_list):
+                    logger.debug('Expanding canceled task %s', join_name)
+                    for transition in join_task.followed_by:
+                        logger.debug('Enqueue new task %s, from %s',
+                                     transition.dest, join_name)
+                        next_state.append((transition.dest, TaskState.CANCELED))
                 else:
                     next_state.append((join_name, TaskState.READY))
 
@@ -280,6 +305,8 @@ class Runner:
                 logger.debug('Join task %s cannot be unblocked, waiting for %s '
                              'to finish', join_name, ', '.join(blocked_by))
                 for _, join_state in join_list:
+                    logger.debug('Adding task %s back to queue as %s',
+                                 join_name, join_state.name.lower())
                     next_state.append((join_name, join_state))
 
         return next_state
