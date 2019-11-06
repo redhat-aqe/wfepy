@@ -47,14 +47,14 @@ class Workflow:
                     logger.debug('Loaded task %s from %s', name, module.__file__)
                     self.tasks[name] = obj
         if duplicates:
-            raise WorkflowError('Duplicate tasks: ' + ",".join(name))
+            raise WorkflowError('Duplicate tasks: ' + ','.join(name))
         # rebuild graph
         for name, task in self.tasks.items():
             for transition in task.followed_by:
                 if transition.dest not in self.tasks:
                     continue
-                if transition not in self.tasks[transition.dest].preceeded_by:
-                    self.tasks[transition.dest].preceeded_by.add(name)
+                if transition not in self.tasks[transition.dest].preceded_by:
+                    self.tasks[transition.dest].preceded_by.add(name)
 
     @property
     def start_points(self):
@@ -81,13 +81,13 @@ class Workflow:
             if not task.followed_by and not task.is_end_point:
                 problems.append('Task %s has no ongoing transitions '
                                 'but is not marked as end point.' % name)
-            if not task.preceeded_by and not task.is_start_point:
+            if not task.preceded_by and not task.is_start_point:
                 problems.append('Task %s has no incoming transitions '
                                 'but is not marked as start point.' % name)
-            if len(task.preceeded_by) > 1 and not task.is_join_point:
+            if len(task.preceded_by) > 1 and not task.is_join_point:
                 problems.append('Task %s has multiple incoming transitions '
                                 'but is not marked as join point.' % name)
-            if len(task.preceeded_by) == 1 and task.is_join_point:
+            if len(task.preceded_by) == 1 and task.is_join_point:
                 problems.append('Task %s has single incoming transition '
                                 'and is marked as join point.' % name)
         if problems:
@@ -147,7 +147,7 @@ class Runner:
         Execute tasks from workflow.
 
         Some tasks might end in state in which they cannot be executed (waiting
-        for external event or join point waiting for preceeding tasks). If there
+        for external event or join point waiting for preceding tasks). If there
         is no task that can be executed run will stop executing and
         :attr:`finished` property will be ``False``. In that case run should be
         called again (with some delay or runner can be dumped to file by
@@ -227,21 +227,21 @@ class Runner:
                 for transition in task.followed_by:
                     new_state = TaskState.NEW
                     if transition.cond and not transition.cond(self.context):
-                        new_state = TaskState.CANCELLED
+                        new_state = TaskState.CANCELED
                     logger.debug('Enqueue new task %s, from %s',
                                  transition.dest, task_name)
                     next_state.append((transition.dest, new_state))
 
-            elif task_state == TaskState.CANCELLED:
+            elif task_state == TaskState.CANCELED:
                 if task.is_join_point:
-                    next_state.append((task_name, TaskState.CANCELLED))
+                    next_state.append((task_name, TaskState.CANCELED))
                 else:
                     logger.info('Task %s execution was canceled by condition',
                                 task_name)
                     for transition in task.followed_by:
                         logger.debug('Enqueue new task %s, from %s',
                                      transition.dest, task_name)
-                        next_state.append((transition.dest, TaskState.CANCELLED))
+                        next_state.append((transition.dest, TaskState.CANCELED))
 
             else:
                 next_state.append((task_name, task_state))
@@ -256,7 +256,7 @@ class Runner:
         for task_name, task_state in state:
             task = self.workflow.tasks[task_name]
             if task.is_join_point and task_state in {TaskState.BLOCKED,
-                                                     TaskState.CANCELLED}:
+                                                     TaskState.CANCELED}:
                 join_points.append((task_name, task_state))
             else:
                 next_state.append((task_name, task_state))
@@ -267,16 +267,16 @@ class Runner:
             join_list = list(join_list)
             join_task = self.workflow.tasks[join_name]
 
-            if len(join_task.preceeded_by) == len(join_list):
+            if len(join_task.preceded_by) == len(join_list):
                 logger.debug('Joining tasks %s to task %s',
-                             ', '.join(join_task.preceeded_by), join_name)
+                             ', '.join(join_task.preceded_by), join_name)
                 if all(s == TaskState.CANCELLED for _, s in join_list):
                     next_state.append((join_name, TaskState.CANCELLED))
                 else:
                     next_state.append((join_name, TaskState.READY))
 
             else:
-                blocked_by = set(join_task.preceeded_by) - set(n for n, _ in join_list)
+                blocked_by = set(join_task.preceded_by) - set(n for n, _ in join_list)
                 logger.debug('Join task %s cannot be unblocked, waiting for %s '
                              'to finish', join_name, ', '.join(blocked_by))
                 for _, join_state in join_list:
@@ -292,10 +292,10 @@ class TaskState(enum.Enum):
 
     :cvar NEW: task new in queue
     :cvar WAITING: task is waiting, function returned ``False``
-    :cvar BLOCKED: task is waiting for completion of preceeding tasks
+    :cvar BLOCKED: task is waiting for completion of preceding tasks
     :cvar READY: task is ready for execution
     :cvar COMPLETE: task was executed and will be expanded
-    :cvar CANCELLED: task was not executed because transition condition was not met
+    :cvar CANCELED: task was not executed because transition condition was not met
 
     .. graphviz:: task-state.gv
     """
@@ -305,7 +305,7 @@ class TaskState(enum.Enum):
     BLOCKED = 6
     READY = 3
     COMPLETE = 4
-    CANCELLED = 5
+    CANCELED = 5
 
 
 @attr.s(hash=True)
@@ -337,7 +337,7 @@ class Task:
     Workflow task. Wraps function for use in workflow.
 
     Wrapped function must accept context from :class:`Runner` via only parameter
-    and should return ``True`` or ``False`` wheter task was completed and
+    and should return ``True`` or ``False`` whether task was completed and
     execution can continue with following tasks.
 
     If wrapped function returned ``False`` execution will stop and task will be
@@ -347,7 +347,7 @@ class Task:
     :ivar function: wrapped function
     :ivar name: task name (by default function name)
     :ivar followed_by: connection to next tasks (set of :class:`Transition`)
-    :ivar preceeded_by: names of preceeding tasks, generated by :class:`Workflow`
+    :ivar preceded_by: names of preceding tasks, generated by :class:`Workflow`
     :ivar is_start_point: task is start point of workflow
     :ivar is_join_point: task is join point of multiple tasks
     :ivar is_end_point: task is end point of workflow
@@ -357,7 +357,7 @@ class Task:
     name = attr.ib()
 
     followed_by = attr.ib(factory=set, init=False)
-    preceeded_by = attr.ib(factory=set, init=False)
+    preceded_by = attr.ib(factory=set, init=False)
 
     is_start_point = attr.ib(default=False, init=False)
     is_join_point = attr.ib(default=False, init=False)
@@ -387,7 +387,7 @@ class DecoratorStack:
     def add_decorator(self, decorator):
         """Add decorator to stack. """
         if not callable(decorator):
-            raise ValueError('Decoration must be callable')
+            raise ValueError('Decorator must be callable')
         self.decorator_list.append(decorator)
 
     def apply_to(self, func):
@@ -425,7 +425,7 @@ class DecoratorStack:
     def reduce(cls, decorator):
         """
         Create decorator function that will create :class:`DecoratorStack` using
-        :meth:`create`, add decorator to list of decorators and aplly decorators
+        :meth:`create`, add decorator to list of decorators and apply decorators
         from stack to decorated function.
         """
         def inner(func):
@@ -439,7 +439,7 @@ class DecoratorStack:
 def task(*args, **kwargs):
     """
     Decorator to mark function as workflow task. See :class:`Task` for arguments
-    docomentation.
+    documentation.
     """
     def decorator(func):
         return Task(func, *args, **kwargs)
@@ -448,7 +448,7 @@ def task(*args, **kwargs):
 
 def followed_by(*args, **kwargs):
     """
-    Add transition to next task. See :class:`Transition` for argumets
+    Add transition to next task. See :class:`Transition` for arguments
     documentation.
     """
     def decorator(func):

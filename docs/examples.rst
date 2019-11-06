@@ -53,9 +53,9 @@ Output from script ::
 Task ``drink_coffee`` was waiting for something and no other tasks could be
 executed, so process stopped.
 
-Waiting tasks are tasks that returned ``False`` (finished tasks must return
-``True``). This allows to implement waiting for events, eg. user must add
-comment to Jira before process can continue.
+Waiting tasks are tasks that returned ``False`` while finished tasks must return
+``True``. This allows to implement waiting for events, eg. user must add comment
+to Jira before process can continue.
 
 
 Branches
@@ -74,7 +74,7 @@ until coffee and while drinking.
 Task ``start`` has multiple ``followed_by`` decorations so when this task
 finish, process will expand followed by list and start executing tasks from both
 branches. In the end of workflow branches are joined in ``end`` task. Join
-points must be explicity marked by ``join_point`` decorator to avoid mistakes.
+points must be explicitly marked by ``join_point`` decorator to avoid mistakes.
 
 If you forgot to mark join point (or start point or end point)
 :meth:`wfpy.Workflow.check_graph` will raise error and you should fix it.
