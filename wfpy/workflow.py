@@ -223,13 +223,11 @@ class Runner:
                     result = False
                 if not isinstance(result, bool):
                     logger.warning(
-                        'Task %s returned %r but should have return True or False '
-                        'wheter task has been completed or not. Result will be '
-                        'converted to bool implicitly or to True if result is None.',
-                        task_name, result
+                        'Task %s returned %r but should have return True or '
+                        'False whether task has been completed or not. Result '
+                        'will be converted to bool implicitly.',
+                        task_name, result,
                     )
-                    if result is None:
-                        result = True
                 if task_error:
                     logger.error('Task %s failed', task_name)
                     next_state.append((task_name, TaskState.READY))
