@@ -1,7 +1,21 @@
-/docs/_build/
-/*.egg-info/
-/.tox
-/.coverage
-__pycache__/
+# python cache
+__pycache__
+*.pyc
 
+# tools files
+.cache
+.pytest_cache
+.coverage
+.tox
+tags
+htmlcov/
 *.png
+
+# distutils files
+/MANIFEST
+/build/
+/dist/
+/*.egg-info/
+
+# docs builds
+/docs/_build
