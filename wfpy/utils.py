@@ -1,7 +1,7 @@
 import graphviz
 
 
-def render_graph(workflow, output, format='png', state=[]):
+def render_graph(workflow, output, format='png', state=None):
     dot = graphviz.Digraph('Workflow')
 
     def task_label(task):
@@ -16,7 +16,7 @@ def render_graph(workflow, output, format='png', state=[]):
         return 'solid,filled'
 
     def task_color(task):
-        if task.name in state:
+        if state and task.name in state:
             return 'green'
         return 'white'
 
