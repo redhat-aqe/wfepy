@@ -41,5 +41,5 @@ setup(
         'Topic :: Utilities',
     ],
     packages=['wfpy'],
-    install_requires=['attrs'],
+    install_requires=['attrs', 'graphviz'],
 )
