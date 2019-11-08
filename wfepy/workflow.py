@@ -167,6 +167,14 @@ class Runner:
 
             self.state = next_state
 
+    def task_execute(self, task):
+        """Execute :class:`Task`."""
+        return task(self.context)
+
+    def transition_eval(self, transition):
+        """Evauluate :attr:`.Transition.cond`."""
+        return not transition.cond or transition.cond(self.context)
+
     def _is_step_possible(self, state):
         step_possible = False
         for task_name, task_state in self.state:
@@ -214,7 +222,7 @@ class Runner:
             elif task_state == TaskState.READY:
                 logger.info('Executing task %s', task_name)
                 try:
-                    result = task(self.context)
+                    result = self.task_execute(task)
                 except Exception as e:
                     logger.exception(e)
                     # To not break runner state, exception must be stored and
@@ -245,7 +253,7 @@ class Runner:
                     logger.debug('Expanding task %s', task_name)
                 for transition in task.followed_by:
                     new_state = TaskState.NEW
-                    if transition.cond and not transition.cond(self.context):
+                    if not self.transition_eval(transition):
                         new_state = TaskState.CANCELED
                     logger.debug('Enqueue new task %s, from %s',
                                  transition.dest, task_name)
