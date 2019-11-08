@@ -1,23 +1,23 @@
-import wfpy
+import wfepy as wf
 
 
-@wfpy.task()
-@wfpy.start_point()
-@wfpy.followed_by('make_coffee')
+@wf.task()
+@wf.start_point()
+@wf.followed_by('make_coffee')
 def start(ctx):
     # All tasks must return True or False if they were finished or waiting for
     # some external event or something and must be executed again later.
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('drink_coffee')
+@wf.task()
+@wf.followed_by('drink_coffee')
 def make_coffee(ctx):
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('end')
+@wf.task()
+@wf.followed_by('end')
 def drink_coffee(ctx):
     import random
     if not random.choice([True, False]):
@@ -27,7 +27,7 @@ def drink_coffee(ctx):
     return True
 
 
-@wfpy.task()
-@wfpy.end_point()
+@wf.task()
+@wf.end_point()
 def end(ctx):
     return True

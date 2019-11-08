@@ -1,18 +1,18 @@
 import unittest
 
-import wfpy
+import wfepy
 
 
-@wfpy.task()
-@wfpy.start_point()
-@wfpy.followed_by('fail')
+@wfepy.task()
+@wfepy.start_point()
+@wfepy.followed_by('fail')
 def start(ctx):
     ctx.done.append('start')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('end')
+@wfepy.task()
+@wfepy.followed_by('end')
 def fail(ctx):
     ctx.done.append('fail')
     if ctx.fail:
@@ -20,8 +20,8 @@ def fail(ctx):
     return True
 
 
-@wfpy.task()
-@wfpy.end_point()
+@wfepy.task()
+@wfepy.end_point()
 def end(ctx):
     ctx.done.append('end')
     return True
@@ -41,15 +41,15 @@ class RunnerExceptionTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.workflow = wfpy.Workflow()
+        self.workflow = wfepy.Workflow()
         self.workflow.load_tasks(__name__)
         self.workflow.check_graph()
 
     def test_create(self):
         """Test if runner was created with start points."""
         runner = self.workflow.create_runner()
-        self.assertIsInstance(runner, wfpy.Runner)
-        self.assertListEqual(runner.state, [('start', wfpy.TaskState.NEW)])
+        self.assertIsInstance(runner, wfepy.Runner)
+        self.assertListEqual(runner.state, [('start', wfepy.TaskState.NEW)])
 
     def test_run(self):
         """Test if run was finished and all tasks executed."""

@@ -1,73 +1,73 @@
 import unittest
 
-import wfpy
+import wfepy
 
 
-@wfpy.task()
-@wfpy.start_point()
-@wfpy.followed_by('task_a')
-@wfpy.followed_by('task_b')
-@wfpy.followed_by('task_c')
-@wfpy.followed_by('task_d')
+@wfepy.task()
+@wfepy.start_point()
+@wfepy.followed_by('task_a')
+@wfepy.followed_by('task_b')
+@wfepy.followed_by('task_c')
+@wfepy.followed_by('task_d')
 def start(ctx):
     ctx.add('start')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('task_x')
+@wfepy.task()
+@wfepy.followed_by('task_x')
 def task_a(ctx):
     ctx.add('task_a')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('task_ab')
+@wfepy.task()
+@wfepy.followed_by('task_ab')
 def task_x(ctx):
     ctx.add('task_x')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('task_ab')
+@wfepy.task()
+@wfepy.followed_by('task_ab')
 def task_b(ctx):
     ctx.add('task_b')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('task_cd')
+@wfepy.task()
+@wfepy.followed_by('task_cd')
 def task_c(ctx):
     ctx.add('task_c')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('task_cd')
+@wfepy.task()
+@wfepy.followed_by('task_cd')
 def task_d(ctx):
     ctx.add('task_d')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('end')
-@wfpy.join_point()
+@wfepy.task()
+@wfepy.followed_by('end')
+@wfepy.join_point()
 def task_ab(ctx):
     ctx.add('task_ab')
     return True
 
 
-@wfpy.task()
-@wfpy.followed_by('end')
-@wfpy.join_point()
+@wfepy.task()
+@wfepy.followed_by('end')
+@wfepy.join_point()
 def task_cd(ctx):
     ctx.add('task_cd')
     return True
 
 
-@wfpy.task()
-@wfpy.join_point()
-@wfpy.end_point()
+@wfepy.task()
+@wfepy.join_point()
+@wfepy.end_point()
 def end(ctx):
     ctx.add('end')
     return True
@@ -80,15 +80,15 @@ class RunnerBranchesTestCase(unittest.TestCase):
     """
 
     def setUp(self):
-        self.workflow = wfpy.Workflow()
+        self.workflow = wfepy.Workflow()
         self.workflow.load_tasks(__name__)
         self.workflow.check_graph()
 
     def test_create(self):
         """Test if runner was created with start points."""
         runner = self.workflow.create_runner()
-        self.assertIsInstance(runner, wfpy.Runner)
-        self.assertListEqual(runner.state, [('start', wfpy.TaskState.NEW)])
+        self.assertIsInstance(runner, wfepy.Runner)
+        self.assertListEqual(runner.state, [('start', wfepy.TaskState.NEW)])
 
     def test_run(self):
         """Test if run was finished and all tasks executed."""

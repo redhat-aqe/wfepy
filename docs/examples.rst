@@ -25,37 +25,37 @@ branches, ...
 
 .. graphviz:: examples/simple.gv
 
-Finally workflow can be executed. Example script that will execute workflow from
+Finally, workflow can be executed. Example script that will execute workflow from
 example above.
 
 .. literalinclude:: examples/simple_run.py
 
 Output from script ::
 
-    INFO:wfpy.workflow:Executing task start
-    INFO:wfpy.workflow:Task start is complete
-    INFO:wfpy.workflow:Executing task make_coffee
-    INFO:wfpy.workflow:Task make_coffee is complete
-    INFO:wfpy.workflow:Executing task drink_coffee
-    INFO:wfpy.workflow:Task drink_coffee is waiting
+    INFO:wfepy.workflow:Executing task start
+    INFO:wfepy.workflow:Task start is complete
+    INFO:wfepy.workflow:Executing task make_coffee
+    INFO:wfepy.workflow:Task make_coffee is complete
+    INFO:wfepy.workflow:Executing task drink_coffee
+    INFO:wfepy.workflow:Task drink_coffee is waiting
 
     INFO:root:Workflow is not finished, trying run it again...
-    INFO:wfpy.workflow:Executing task drink_coffee
-    INFO:wfpy.workflow:Task drink_coffee is waiting
+    INFO:wfepy.workflow:Executing task drink_coffee
+    INFO:wfepy.workflow:Task drink_coffee is waiting
 
     INFO:root:Workflow is not finished, trying run it again...
-    INFO:wfpy.workflow:Executing task drink_coffee
-    INFO:wfpy.workflow:Task drink_coffee is complete
-    INFO:wfpy.workflow:Executing task end
-    INFO:wfpy.workflow:Task end is complete
-    INFO:wfpy.workflow:Reached end point end
+    INFO:wfepy.workflow:Executing task drink_coffee
+    INFO:wfepy.workflow:Task drink_coffee is complete
+    INFO:wfepy.workflow:Executing task end
+    INFO:wfepy.workflow:Task end is complete
+    INFO:wfepy.workflow:Reached end point end
 
 Task ``drink_coffee`` was waiting for something and no other tasks could be
 executed, so process stopped.
 
 Waiting tasks are tasks that returned ``False`` while finished tasks must return
-``True``. This allows to implement waiting for events, eg. user must add comment
-to Jira before process can continue.
+``True``. This allow implement waiting for events, for example when user must
+add comment to Jira task before process can continue.
 
 
 Branches
@@ -77,6 +77,6 @@ branches. In the end of workflow branches are joined in ``end`` task. Join
 points must be explicitly marked by ``join_point`` decorator to avoid mistakes.
 
 If you forgot to mark join point (or start point or end point)
-:meth:`wfpy.Workflow.check_graph` will raise error and you should fix it.
+:meth:`wfepy.Workflow.check_graph` will raise error and you should fix it.
 
 .. graphviz:: examples/branches.gv

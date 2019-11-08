@@ -4,8 +4,8 @@ import logging
 
 import click
 
-import wfpy
-import wfpy.utils
+import wfepy
+import wfepy.utils
 
 
 @click.command()
@@ -16,10 +16,10 @@ def run_wf(debug, example_name):
 
     example_module = __import__(example_name)
 
-    wf = wfpy.Workflow()
+    wf = wfepy.Workflow()
     wf.load_tasks(example_module)
 
-    wfpy.utils.render_graph(wf, os.path.join(os.path.dirname(__file__), example_name + '.gv'))
+    wfepy.utils.render_graph(wf, os.path.join(os.path.dirname(__file__), example_name + '.gv'))
 
     runner = wf.create_runner()
     runner.run()

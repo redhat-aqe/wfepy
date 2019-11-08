@@ -1,7 +1,5 @@
-Welcome to WFpy's documentation!
-================================
-
-Simple workflow engine.
+Welcome to WfEpy's documentation!
+=================================
 
 
 .. toctree::
@@ -11,19 +9,4 @@ Simple workflow engine.
 
     *
 
-
-Installation
-------------
-
-Install it using pip ::
-
-    pip3 install wfpy
-
-or clone repository ::
-
-    git clone https://gitlab.com/fpob/wfpy.git
-    cd wfpy
-
-and install Python package including dependencies ::
-
-    python3 setup.py install
+.. include:: ../README.rst

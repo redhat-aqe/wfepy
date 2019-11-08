@@ -1,33 +1,33 @@
 API
 ===
 
-.. autoclass:: wfpy.Workflow
+.. autoclass:: wfepy.Workflow
     :members:
 
-.. autoclass:: wfpy.Runner
+.. autoclass:: wfepy.Runner
     :members:
 
-.. autoclass:: wfpy.Task
+.. autoclass:: wfepy.Task
     :members:
 
-.. autoclass:: wfpy.TaskState
+.. autoclass:: wfepy.TaskState
     :members:
 
-.. autoclass:: wfpy.Transition
+.. autoclass:: wfepy.Transition
     :members:
 
-.. autoclass:: wfpy.WorkflowError
+.. autoclass:: wfepy.WorkflowError
     :members:
 
 
 Decorators
 ----------
 
-.. autoclass:: wfpy.DecoratorStack
+.. autoclass:: wfepy.DecoratorStack
     :members:
 
-.. autofunction:: wfpy.task
-.. autofunction:: wfpy.followed_by
-.. autofunction:: wfpy.start_point
-.. autofunction:: wfpy.join_point
-.. autofunction:: wfpy.end_point
+.. autofunction:: wfepy.task
+.. autofunction:: wfepy.followed_by
+.. autofunction:: wfepy.start_point
+.. autofunction:: wfepy.join_point
+.. autofunction:: wfepy.end_point

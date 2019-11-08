@@ -4,7 +4,7 @@ import re
 
 
 version = None
-with open(path.join('wfpy', '__init__.py')) as f:
+with open(path.join('wfepy', '__init__.py')) as f:
     version_cre = re.compile(
         r'^__version__\s+=\s+[\'"](?P<version>\d+\.\d+.*)[\'"]$'
     )
@@ -19,14 +19,14 @@ with open('README.rst') as f:
 
 
 setup(
-    name='wfpy',
+    name='wfepy',
     version=version,
     description='',
     long_description=long_description,
     author='Filip Pobořil',
     author_email='tsuki@fpob.cz',
-    url='https://gitlab.com/fpob/wfpy',
-    download_url='https://gitlab.com/fpob/wfpy/-/archive/v{v}/wfpy-v{v}.zip'.format(v=version),
+    url='https://gitlab.com/fpob/wfepy',
+    download_url='https://gitlab.com/fpob/wfepy/-/archive/v{v}/wfepy-v{v}.zip'.format(v=version),
     license='MIT',
     keywords=['Workflow'],
     classifiers=[
@@ -40,6 +40,6 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Topic :: Utilities',
     ],
-    packages=['wfpy'],
+    packages=['wfepy'],
     install_requires=['attrs', 'graphviz'],
 )

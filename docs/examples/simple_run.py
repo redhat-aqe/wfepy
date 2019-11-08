@@ -1,6 +1,6 @@
 import logging
-import wfpy
-import wfpy.utils
+import wfepy
+import wfepy.utils
 
 logging.basicConfig(level=logging.INFO)
 
@@ -10,14 +10,14 @@ import simple
 
 
 # Create new workflow.
-wf = wfpy.Workflow()
+wf = wfepy.Workflow()
 # Load tasks from module and add them to workflow.
 wf.load_tasks(simple)
 # Check if graph is OK, all tasks are defined, decorated correctly, ...
 wf.check_graph()
 
 # Render graph.
-wfpy.utils.render_graph(wf, 'basic.gv')
+wfepy.utils.render_graph(wf, 'basic.gv')
 
 # Create runner for workflow.
 runner = wf.create_runner()

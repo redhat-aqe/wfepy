@@ -23,22 +23,22 @@ sys.path.insert(0, ROOT_DIR)
 
 # Workaround to have correct names in docs when using wildcard import in
 # `__init__.py`. See: https://stackoverflow.com/a/47924396
-import wfpy
-for obj in wfpy.__dict__.values():
+import wfepy
+for obj in wfepy.__dict__.values():
     if hasattr(obj, '__module__'):
-        obj.__module__ = wfpy.__name__
+        obj.__module__ = wfepy.__name__
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'WFpy'
+project = 'WfEpy'
 copyright = '2019, Filip Pobořil'
 author = 'Filip Pobořil'
 
 # The short X.Y version
-version = wfpy.__version__
+version = wfepy.__version__
 # The full version, including alpha/beta/rc tags
-release = wfpy.__version__
+release = wfepy.__version__
 
 # Tweak version to X.Y format
 version_match = re.match('^(\d+\.\d+)', version)
@@ -121,7 +121,7 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'WFpyDoc'
+htmlhelp_basename = 'WfEpyDoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -148,7 +148,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'WFpy.tex', 'WFpy Documentation',
+    (master_doc, 'WfEpy.tex', 'WfEpy Documentation',
      'Filip Pobořil', 'manual'),
 ]
 
@@ -158,7 +158,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'WFpy', 'WFpy Documentation',
+    (master_doc, 'WfEpy', 'WfEpy Documentation',
      [author], 1)
 ]
 
@@ -169,8 +169,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'WFpy', 'WFpy Documentation',
-     author, 'WFpy', 'One line description of project.',
+    (master_doc, 'WfEpy', 'WfEpy Documentation',
+     author, 'WfEpy', 'One line description of project.',
      'Miscellaneous'),
 ]
 
