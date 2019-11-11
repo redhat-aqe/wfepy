@@ -13,7 +13,7 @@ Install it using pip ::
 
 or clone repository ::
 
-    git clone https://gitlab.com/fpob/wfepy.git
+    git clone https://gitlab.com/redhat-aqe/wfepy.git
     cd wfepy
 
 and install Python package including dependencies ::
