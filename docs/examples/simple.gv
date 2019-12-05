@@ -1,0 +1,9 @@
+digraph Workflow {
+	drink_coffee [fillcolor=white style="solid,filled"]
+	drink_coffee -> end
+	end [fillcolor=red style="bold,filled"]
+	make_coffee [fillcolor=white style="solid,filled"]
+	make_coffee -> drink_coffee
+	start [fillcolor=green style="bold,filled"]
+	start -> make_coffee
+}

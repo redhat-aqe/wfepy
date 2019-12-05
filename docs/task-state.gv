@@ -1,0 +1,21 @@
+digraph TaskState {
+    _start [label="" style=invis]
+    _end [label="" style=invis]
+    _start_canceled [label="" style=invis]
+    _end_canceled [label="" style=invis]
+
+    { rank=same; _start, _start_canceled }
+    { rank=same; _end, _end_canceled }
+
+    { rank=same; COMPLETE, CANCELED }
+    { rank=same; READY, WAITING, BLOCKED }
+
+    _start -> NEW -> READY -> COMPLETE -> _end
+    _start_canceled -> CANCELED -> _end_canceled
+
+    READY -> WAITING [label="executed but not done\n(task returned False)"]
+    WAITING -> READY [label="rescheduled\non next run"]
+
+    NEW -> BLOCKED [label="task is join point"]
+    BLOCKED -> READY [label="preceeding tasks finished"]
+}
