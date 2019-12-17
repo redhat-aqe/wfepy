@@ -14,8 +14,7 @@ workflow by traversing graph and calling task functions. Context passed to each
 function is arbitrary user object that can be used to store data, connect to
 other services or APIs, ...
 
-.. code-block:: python
-    :caption: Example of decorators usage
+.. code:: python
 
     @wfepy.task()
     @wfepy.start_point()
@@ -44,8 +43,7 @@ cron. If workflow have task that cannot be finished in single run library
 provides way how to store current state of runner including user data and
 restore it on next run.
 
-.. code-block:: python
-    :caption: Example of runner with storing state to file
+.. code:: python
 
     import coffee_workflow
 
