@@ -42,4 +42,5 @@ setup(
     ],
     packages=['wfepy'],
     install_requires=['attrs', 'graphviz'],
+    python_requires='>=3.5, <4',
 )
