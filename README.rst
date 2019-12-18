@@ -14,10 +14,10 @@ The library provides the following features:
 * Workflow defined in code, via decorators
 * Flat workflow structure
 * Visualisation features (via graphviz)
-* Partial execution model (workflow can be triggered multiple times until final
-completion)
+* Partial execution model (workflow can be triggered multiple times until
+  final completion)
 * Allows long running tasks (can be weeks/months or more) without persistent
-processes
+  processes
 * No scheduler included, but can be triggered by cron
 * Serialization / deserialization included
 * Multiple start and end points are supported
