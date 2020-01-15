@@ -1,13 +1,37 @@
 WfEpy
 =====
 
+.. image:: https://img.shields.io/github/license/redhat-aqe/wfepy
+    :alt: GitHub
+    :target: https://github.com/redhat-aqe/wfepy/blob/master/LICENSE
+
+.. image:: https://img.shields.io/readthedocs/wfepy/stable
+    :alt: Read the Docs
+    :target: https://wfepy.readthedocs.io/en/stable/
+
+.. image:: https://img.shields.io/travis/redhat-aqe/wfepy
+    :alt: Travis (.org)
+    :target: https://travis-ci.org/redhat-aqe/wfepy
+
+.. image:: https://img.shields.io/pypi/v/wfepy
+    :alt: PyPI
+    :target: https://pypi.org/project/wfepy/
+
+.. image:: https://img.shields.io/pypi/pyversions/wfepy
+    :alt: PyPI - Python Version
+    :target: https://pypi.org/project/wfepy/
+
+
 **WfEpy (Workflow Engine for Python)** is Python library for creating workflows
 and automating processes. It is designed to be as simple as possible so
 developers can focus on tasks logic, not how to execute workflow, store state,
 etc.
 
+**Documentation:** https://wfepy.readthedocs.io/en/stable/
+
+
 Basic features
-------------
+--------------
 
 The library provides the following features:
 
@@ -34,7 +58,7 @@ The library adds some restrictions:
 
 
 Details
-------------
+-------
 
 The workflow is defined via decorators attached to functions, such as:
 
@@ -87,7 +111,7 @@ A function can be conditionally followed by another function:
 
 
 Execution model
-------------
+---------------
 
 WfEpy does not provide any scheduler, but can be triggered by cron. It works on
 a partial-execution model, meaning it can be triggered multiple times.
