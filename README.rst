@@ -31,7 +31,7 @@ etc.
 
 
 Basic features
-------------
+--------------
 
 The library provides the following features:
 
@@ -58,7 +58,7 @@ The library adds some restrictions:
 
 
 Details
-------------
+-------
 
 The workflow is defined via decorators attached to functions, such as:
 
@@ -111,7 +111,7 @@ A function can be conditionally followed by another function:
 
 
 Execution model
-------------
+---------------
 
 WfEpy does not provide any scheduler, but can be triggered by cron. It works on
 a partial-execution model, meaning it can be triggered multiple times.
