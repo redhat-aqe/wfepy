@@ -113,6 +113,7 @@ class Runner:
     workflow = attr.ib()
     context = attr.ib(default=None)
     state = attr.ib(default=None, init=False)
+    completed_tasks_set = set()
 
     def __attrs_post_init__(self):
         self.state = [(task, TaskState.NEW) for task in self.workflow.start_points]
@@ -242,6 +243,7 @@ class Runner:
                 elif result:
                     logger.info('Task %s is complete', task_name)
                     next_state.append((task_name, TaskState.COMPLETE))
+                    self.completed_tasks_set.add(task_name)
                 else:
                     logger.info('Task %s is waiting', task_name)
                     next_state.append((task_name, TaskState.WAITING))
@@ -294,7 +296,7 @@ class Runner:
             join_list = list(join_list)
             join_task = self.workflow.tasks[join_name]
 
-            if len(join_task.preceded_by) == len(join_list):
+            if join_task.preceded_by.issubset(self.completed_tasks_set):
                 logger.debug('Joining tasks %s to task %s',
                              ', '.join(join_task.preceded_by), join_name)
                 if all(s == TaskState.CANCELED for _, s in join_list):
@@ -413,7 +415,7 @@ class Task:
         `all` checks if task have all labels, `any` checks if task has at least
         one of labels.
         """
-        return reducer(l in self.labels for l in labels)
+        return reducer(label in self.labels for label in labels)
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)

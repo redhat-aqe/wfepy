@@ -5,32 +5,32 @@ import wfepy
 
 @wfepy.task()
 @wfepy.start_point()
-@wfepy.followed_by('blocked')
-@wfepy.followed_by('not_blocked')
-def start(ctx):
-    ctx.done.add('start')
+@wfepy.followed_by('blocked_wb')
+@wfepy.followed_by('not_blocked_wb')
+def start_wb(ctx):
+    ctx.done.add('start_wb')
     return True
 
 
 @wfepy.task()
-@wfepy.followed_by('end')
-def blocked(ctx):
-    ctx.done.add('blocked')
+@wfepy.followed_by('end_wb')
+def blocked_wb(ctx):
+    ctx.done.add('blocked_wb')
     return not ctx.blocked
 
 
 @wfepy.task()
-@wfepy.followed_by('end')
-def not_blocked(ctx):
-    ctx.done.add('not_blocked')
+@wfepy.followed_by('end_wb')
+def not_blocked_wb(ctx):
+    ctx.done.add('not_blocked_wb')
     return True
 
 
 @wfepy.task()
 @wfepy.join_point()
 @wfepy.end_point()
-def end(ctx):
-    ctx.done.add('end')
+def end_wb(ctx):
+    ctx.done.add('end_wb')
     return True
 
 
@@ -59,7 +59,7 @@ class RunnerWaitingBranchesTestCase(unittest.TestCase):
         """Test if runner was created with start points."""
         runner = self.workflow.create_runner()
         self.assertIsInstance(runner, wfepy.Runner)
-        self.assertListEqual(runner.state, [('start', wfepy.TaskState.NEW)])
+        self.assertListEqual(runner.state, [('start_wb', wfepy.TaskState.NEW)])
 
     def test_run(self):
         """Test if run was finished and all tasks executed."""
@@ -68,14 +68,17 @@ class RunnerWaitingBranchesTestCase(unittest.TestCase):
 
         runner.run()
         self.assertFalse(runner.finished)
-        self.assertSetEqual(context.done, {'start', 'blocked', 'not_blocked'})
+        self.assertSetEqual(context.done, {'start_wb', 'blocked_wb', 'not_blocked_wb'})
 
         runner.run()
         self.assertFalse(runner.finished)
-        self.assertSetEqual(context.done, {'start', 'blocked', 'not_blocked'})
+        self.assertSetEqual(context.done, {'start_wb', 'blocked_wb', 'not_blocked_wb'})
 
         context.blocked = False
 
         runner.run()
         self.assertTrue(runner.finished)
-        self.assertSetEqual(context.done, {'start', 'blocked', 'not_blocked', 'end'})
+        self.assertSetEqual(context.done, {'start_wb',
+                                           'blocked_wb',
+                                           'not_blocked_wb',
+                                           'end_wb'})
