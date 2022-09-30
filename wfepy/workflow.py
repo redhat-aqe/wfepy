@@ -108,11 +108,13 @@ class Runner:
     :ivar workflow: :class:`Workflow`
     :ivar context: arbitrary user object, passed to all tasks
     :ivar state: state of execution
+    :ivar completed_tasks: include completed/canceled non-joint tasks
     """
 
     workflow = attr.ib()
     context = attr.ib(default=None)
     state = attr.ib(default=None, init=False)
+    completed_tasks = attr.ib(factory=list)
 
     def __attrs_post_init__(self):
         self.state = [(task, TaskState.NEW) for task in self.workflow.start_points]
@@ -125,13 +127,15 @@ class Runner:
 
     def dump(self, file_path):
         """
-        Dump runner to file. Stored dump contains :attr:`context` and
-        :attr:`state` so runner execution can be restored and finished later.
+        Dump runner to file. Stored dump contains :attr:`context`,
+        :attr:`state` and :attr:`completed_tasks` so runner execution
+        can be restored and finished later.
         """
         with open(file_path, 'wb') as f:
             pickle.dump({
                 'state': self.state,
                 'context': self.context,
+                'completed_tasks': self.completed_tasks,
             }, f)
 
     @property
@@ -242,6 +246,7 @@ class Runner:
                 elif result:
                     logger.info('Task %s is complete', task_name)
                     next_state.append((task_name, TaskState.COMPLETE))
+                    self.completed_tasks.append(task_name)
                 else:
                     logger.info('Task %s is waiting', task_name)
                     next_state.append((task_name, TaskState.WAITING))
@@ -265,6 +270,7 @@ class Runner:
                 else:
                     logger.info('Task %s execution was canceled by condition',
                                 task_name)
+                    self.completed_tasks.append(task_name)
                     for transition in task.followed_by:
                         logger.debug('Enqueue new task %s, from %s',
                                      transition.dest, task_name)
@@ -294,7 +300,7 @@ class Runner:
             join_list = list(join_list)
             join_task = self.workflow.tasks[join_name]
 
-            if len(join_task.preceded_by) == len(join_list):
+            if join_task.preceded_by.issubset(set(self.completed_tasks)):
                 logger.debug('Joining tasks %s to task %s',
                              ', '.join(join_task.preceded_by), join_name)
                 if all(s == TaskState.CANCELED for _, s in join_list):
@@ -413,7 +419,7 @@ class Task:
         `all` checks if task have all labels, `any` checks if task has at least
         one of labels.
         """
-        return reducer(l in self.labels for l in labels)
+        return reducer(label in self.labels for label in labels)
 
     def __call__(self, *args, **kwargs):
         return self.func(*args, **kwargs)
